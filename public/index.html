@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Tuppen - Das traditionelle Kartenspiel</title>
   <meta name="description" content="Tuppen – Multiplayer Kartenspiel für 2-6 Spieler mit Klopfen, 4 Bildern und belgischem Kartendeck.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script>window.APP_BUILD_ID = window.APP_BUILD_ID || "init";</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,7 +26,6 @@
         <div class="lobby-header">
           <div class="game-badge">Traditionelles Kartenspiel</div>
           <h1 class="game-title">TUPPEN</h1>
-          <p class="game-subtitle">Klopfen, Bluffen & der entscheidende 4. Stich (Ausscheiden bei 10 Strafpunkten)</p>
         </div>
 
         <div id="lobbyInitialOptions" class="lobby-section">
@@ -287,7 +290,7 @@
               <span class="declarer-pill hidden" id="declarerPillTop">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillTop">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillTop">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-we" id="tagTop">WIR</span>
+              <span class="team-tag tag-we hidden" id="tagTop"></span>
             </div>
             <div class="hand-card-backs" id="cardsTop">
               <!-- Mini-Kartenrücken -->
@@ -311,7 +314,7 @@
               <span class="declarer-pill hidden" id="declarerPillLeft">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillLeft">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillLeft">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-they" id="tagLeft">SIE</span>
+              <span class="team-tag tag-they hidden" id="tagLeft"></span>
             </div>
             <div class="hand-card-backs vertical" id="cardsLeft">
               <!-- Mini-Kartenrücken -->
@@ -335,7 +338,7 @@
               <span class="declarer-pill hidden" id="declarerPillRight">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillRight">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillRight">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-they" id="tagRight">SIE</span>
+              <span class="team-tag tag-they hidden" id="tagRight"></span>
             </div>
             <div class="hand-card-backs vertical" id="cardsRight">
               <!-- Mini-Kartenrücken -->
@@ -359,7 +362,7 @@
               <span class="declarer-pill hidden" id="declarerPillTopLeft">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillTopLeft">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillTopLeft">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-we" id="tagTopLeft">WIR</span>
+              <span class="team-tag tag-we hidden" id="tagTopLeft"></span>
             </div>
             <div class="hand-card-backs" id="cardsTopLeft"></div>
             <div class="four-pics-table-pile hidden" id="laidPileTopLeft" onclick="challengeLaidPile('TopLeft')" title="Aufdecken & Prüfen"></div>
@@ -380,7 +383,7 @@
               <span class="declarer-pill hidden" id="declarerPillBottomLeft">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillBottomLeft">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillBottomLeft">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-they" id="tagBottomLeft">SIE</span>
+              <span class="team-tag tag-they hidden" id="tagBottomLeft"></span>
             </div>
             <div class="hand-card-backs" id="cardsBottomLeft"></div>
             <div class="four-pics-table-pile hidden" id="laidPileBottomLeft" onclick="challengeLaidPile('BottomLeft')" title="Aufdecken & Prüfen"></div>
@@ -401,7 +404,7 @@
               <span class="declarer-pill hidden" id="declarerPillTopRight">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillTopRight">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillTopRight">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-we" id="tagTopRight">WIR</span>
+              <span class="team-tag tag-we hidden" id="tagTopRight"></span>
             </div>
             <div class="hand-card-backs" id="cardsTopRight"></div>
             <div class="four-pics-table-pile hidden" id="laidPileTopRight" onclick="challengeLaidPile('TopRight')" title="Aufdecken & Prüfen"></div>
@@ -422,7 +425,7 @@
               <span class="declarer-pill hidden" id="declarerPillBottomRight">👑 Ansager</span>
               <span class="mit-pill hidden" id="mitPillBottomRight">⭐ Mit'</span>
               <span class="thrown-pill hidden" id="thrownPillBottomRight">🗑️ Weggeschmissen</span>
-              <span class="team-tag tag-they" id="tagBottomRight">SIE</span>
+              <span class="team-tag tag-they hidden" id="tagBottomRight"></span>
             </div>
             <div class="hand-card-backs" id="cardsBottomRight"></div>
             <div class="four-pics-table-pile hidden" id="laidPileBottomRight" onclick="challengeLaidPile('BottomRight')" title="Aufdecken & Prüfen"></div>
@@ -474,7 +477,7 @@
                 <span class="declarer-pill hidden" id="declarerPillBottom">👑 Ansager</span>
                 <span class="mit-pill hidden" id="mitPillBottom">⭐ Mit'</span>
                 <span class="thrown-pill hidden" id="thrownPillBottom">🗑️ Weggeschmissen</span>
-                <span class="team-tag tag-we" id="tagBottom">WIR</span>
+                <span class="team-tag tag-we hidden" id="tagBottom"></span>
                 <span class="badge badge-dealer hidden" id="dealerBottom">Geber</span>
               </div>
               <div id="turnIndicator" class="turn-indicator hidden">⚡ Du bist am Zug!</div>

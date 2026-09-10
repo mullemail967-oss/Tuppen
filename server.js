@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 const {
   SUITS,
   RANKS,
@@ -38,12 +39,49 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
+// Eindeutige Build-ID pro Server-Start / Deployment (Render Git Commit oder Zeitstempel)
+const APP_BUILD_ID = process.env.RENDER_GIT_COMMIT || Date.now().toString(36);
+console.log(`[Version] Tuppen Server Build ID: ${APP_BUILD_ID}`);
+
+// 1. API Route für periodisches Versions-Polling & Live-Updates
+app.get('/api/version', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.json({ buildId: APP_BUILD_ID, timestamp: Date.now() });
+});
+
+// 2. Dynamische Auslieferung von index.html mit Cache-Busting (injiziert aktuellen APP_BUILD_ID)
+app.get(['/', '/index.html'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  fs.readFile(indexPath, 'utf8', (err, html) => {
+    if (err) {
+      return res.status(500).send('Fehler beim Laden der Seite');
+    }
+    const updatedHtml = html
+      .replace(/href="style\.css(\?[^"]*)?"/g, `href="style.css?v=${APP_BUILD_ID}"`)
+      .replace(/src="client\.js(\?[^"]*)?"/g, `src="client.js?v=${APP_BUILD_ID}"`)
+      .replace('</head>', `  <script>window.APP_BUILD_ID = "${APP_BUILD_ID}";</script>\n</head>`);
+
+    res.send(updatedHtml);
+  });
+});
+
 // Statische Dateien aus dem public-Ordner bereitstellen (ohne Caching für sofortige Updates)
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
   maxAge: 0,
   setHeaders: (res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
   }
 }));
 
@@ -1951,6 +1989,9 @@ function checkBotAction(room) {
 // SOCKET.IO EVENT HANDLING
 // --------------------------------------------------------------------------
 io.on('connection', (socket) => {
+  // Sende aktuelle Server-Build-ID zur automatischen Update-Prüfung
+  socket.emit('server_version', { buildId: APP_BUILD_ID });
+
   let currentRoomCode = null;
   let currentSeatIndex = -1;
 

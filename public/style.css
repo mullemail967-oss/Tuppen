@@ -1055,7 +1055,7 @@ input[type="text"]:focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 2px;
+  margin-top: 5px;
   gap: 1px;
 }
 
@@ -1071,41 +1071,44 @@ input[type="text"]:focus {
   text-align: center;
 }
 
-/* Strafpunkte-Badge am Avatar (V8) */
+/* Strafpunkte- / Lebens-Badge am Avatar (V8) */
 .player-penalty-badge {
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 8px;
-  line-height: 1.3;
+  padding: 1.5px 6px;
+  border-radius: 9px;
+  line-height: 1.2;
   text-align: center;
   white-space: nowrap;
   letter-spacing: 0.3px;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+  z-index: 5;
 }
 
 .player-penalty-badge.penalty-safe {
-  background: rgba(34, 197, 94, 0.25);
+  background: rgba(15, 23, 42, 0.92);
   color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  border: 1px solid rgba(34, 197, 94, 0.6);
 }
 
 .player-penalty-badge.penalty-warn {
-  background: rgba(245, 158, 11, 0.25);
+  background: rgba(15, 23, 42, 0.92);
   color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.6);
 }
 
 .player-penalty-badge.penalty-danger {
-  background: rgba(239, 68, 68, 0.3);
+  background: rgba(15, 23, 42, 0.92);
   color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  border: 1px solid rgba(239, 68, 68, 0.8);
   animation: pulsePenalty 1.5s infinite alternate;
 }
 
 .player-penalty-badge.penalty-eliminated {
-  background: rgba(100, 100, 100, 0.3);
+  background: rgba(30, 30, 30, 0.9);
   color: #9ca3af;
-  border: 1px solid rgba(100, 100, 100, 0.4);
+  border: 1px solid rgba(100, 100, 100, 0.6);
   text-decoration: line-through;
 }
 
@@ -3610,8 +3613,9 @@ input:checked + .slider:before {
   }
 
   .player-penalty-badge {
-    font-size: 0.55rem;
-    padding: 1px 4px;
+    font-size: 0.62rem;
+    padding: 1px 5px;
+    border-radius: 8px;
   }
 }
 

@@ -149,7 +149,8 @@ function playSound(type) {
 // SVG Sprite Loader (WebKit/Safari kompatibel ohne display:none)
 async function initSvgSprite() {
   try {
-    const res = await fetch('svg-cards.svg');
+    const svgUrl = 'svg-cards.svg' + (window.APP_BUILD_ID ? `?v=${window.APP_BUILD_ID}` : '');
+    const res = await fetch(svgUrl, { cache: 'no-store' });
     const text = await res.text();
     let container = document.getElementById('svgSpriteContainer');
     if (!container) {
@@ -792,6 +793,66 @@ function openLastTrickModal() {
 
 function closeLastTrickModal() {
   document.getElementById('lastTrickModal').classList.add('hidden');
+}
+
+// --------------------------------------------------------------------------
+// VERSION-CHECK & AUTOMATISCHES CACHE-UPDATE BEI NEUEM DEPLOYMENT
+// --------------------------------------------------------------------------
+let isReloadingForUpdate = false;
+
+function triggerAppUpdate(serverBuildId) {
+  if (isReloadingForUpdate) return;
+  isReloadingForUpdate = true;
+  console.log(`[Update] Neuer Server-Build erkannt: ${serverBuildId}. Führe Refresh aus...`);
+  
+  showToast('🚀 Ein neues Update ist verfügbar! Die Seite wird aktualisiert...');
+  
+  setTimeout(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('_v', serverBuildId || Date.now().toString());
+    window.location.replace(url.toString());
+  }, 1200);
+}
+
+socket.on('server_version', ({ buildId }) => {
+  if (!buildId) return;
+  if (!window.APP_BUILD_ID || window.APP_BUILD_ID === 'init') {
+    window.APP_BUILD_ID = buildId;
+    return;
+  }
+  if (window.APP_BUILD_ID !== buildId) {
+    triggerAppUpdate(buildId);
+  }
+});
+
+function checkVersionViaApi() {
+  fetch('/api/version?_t=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.buildId && window.APP_BUILD_ID && window.APP_BUILD_ID !== 'init' && data.buildId !== window.APP_BUILD_ID) {
+        triggerAppUpdate(data.buildId);
+      }
+    })
+    .catch(() => {});
+}
+
+// Prüfung, sobald der Tab wieder aktiviert wird (z. B. Smartphone entsperrt)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    checkVersionViaApi();
+  }
+});
+
+// Periodische Prüfung im Hintergrund alle 60 Sekunden
+setInterval(checkVersionViaApi, 60000);
+
+// Legacy ServiceWorker restlos entfernen, falls ein Browser noch alte Caches hält
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const reg of registrations) {
+      reg.unregister();
+    }
+  }).catch(() => {});
 }
 
 // --------------------------------------------------------------------------
@@ -1831,7 +1892,8 @@ function renderTablePlayers() {
     const thrownPill = document.getElementById(`thrownPill${key}`);
     if (thrownPill) thrownPill.classList.add('hidden');
 
-    // Lebens-Tag
+    // Lebens-Tag (nur für Status wie 'Gepasst' oder 'Ausgeschieden' einblenden;
+    // reguläre Leben stehen bereits direkt am Avatar als Herz-Badge ❤️ 7 bzw. 🔨 1)
     const tagEl = document.getElementById(`tag${key}`);
     const startLives = gameState.settings ? (gameState.settings.initialLives || gameState.settings.maxPenalty || 7) : 7;
     const lives = (player.score !== undefined) ? player.score : startLives;
@@ -1839,16 +1901,16 @@ function renderTablePlayers() {
       if (player.eliminated || lives <= 0) {
         tagEl.textContent = '💀 Ausgeschieden';
         tagEl.className = 'team-tag tag-eliminated';
+        tagEl.classList.remove('hidden');
       } else if (player.folded) {
         tagEl.textContent = '🚪 Gepasst';
         tagEl.className = 'team-tag tag-folded';
-      } else if (lives === 1) {
-        tagEl.textContent = '❤️ 1 Leben';
-        tagEl.className = 'team-tag tag-danger';
+        tagEl.classList.remove('hidden');
       } else {
-        tagEl.textContent = `❤️ ${lives} Leben`;
-        if (lives <= 2) tagEl.className = 'team-tag tag-warn';
-        else tagEl.className = 'team-tag tag-safe';
+        // Reguläre Leben stehen bereits sauber als Herz-Badge direkt am Avatar (z. B. ❤️ 7 oder 🔨 1).
+        // Keine redundante doppelte Lebensanzeige mehr unter dem Namen!
+        tagEl.textContent = '';
+        tagEl.classList.add('hidden');
       }
     }
 
@@ -1861,15 +1923,11 @@ function renderTablePlayers() {
     if (avatarBox) {
       avatarBox.classList.toggle('player-turn-glow', player.isTurn);
 
-      // Lebens Mini-Badge unter Avatar
+      // Lebens Mini-Badge unter Avatar (Haupt-Lebensanzeige für Mitspieler)
       let penBadge = avatarBox.querySelector('.player-penalty-badge');
       if (!penBadge) {
         penBadge = document.createElement('div');
         penBadge.className = 'player-penalty-badge';
-        penBadge.style.position = 'absolute';
-        penBadge.style.bottom = '-10px';
-        penBadge.style.left = '50%';
-        penBadge.style.transform = 'translateX(-50%)';
         avatarBox.appendChild(penBadge);
       }
       if (player.eliminated || lives <= 0) {
@@ -1884,7 +1942,7 @@ function renderTablePlayers() {
         else penBadge.className = 'player-penalty-badge penalty-safe';
       }
       penBadge.style.position = 'absolute';
-      penBadge.style.bottom = '-10px';
+      penBadge.style.bottom = '-7px';
       penBadge.style.left = '50%';
       penBadge.style.transform = 'translateX(-50%)';
     }
