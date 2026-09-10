@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=8.7">
+  <link rel="stylesheet" href="style.css?v=12.0">
 </head>
 <body>
 
@@ -229,7 +229,7 @@
           <button id="hostMenuBtn" class="btn-tool btn-host-menu hidden" onclick="openHostMenu()" title="Spielleiter-Menü (Spieler kicken, Lobby, Link)">
             👑 Menü<span id="hostMenuReqBadge" class="host-req-badge hidden">0</span>
           </button>
-          <button id="announceContraBtn" class="btn-tool btn-contra hidden" onclick="knock()" title="Klopfen: Rundeneinsatz um 1 Leben erhöhen">
+          <button id="announceContraBtn" class="btn-tool btn-contra hidden" onclick="handleTopKnock()" title="Klopfen: Rundeneinsatz um 1 Leben erhöhen">
             🔨 Klopfen
           </button>
           <button id="declareFourPicsBtn" class="btn-tool btn-four-pics hidden" onclick="declareFourPictures()" title="4 Bilder ansagen und tauschen">
@@ -970,6 +970,6 @@
   <!-- Socket.io Script -->
   <script src="/socket.io/socket.io.js"></script>
   <!-- Client JavaScript -->
-  <script src="client.js?v=11.0"></script>
+  <script src="client.js?v=12.0"></script>
 </body>
 </html>

@@ -476,7 +476,20 @@ function showEmoteBubble(seatIndex, emote) {
 function knock() {
   socket.emit('knock');
   playSound('contra_sound');
+  const banner = document.getElementById('mitActionBanner');
+  if (banner) banner.classList.add('hidden');
 }
+window.knock = knock;
+
+function handleTopKnock() {
+  if (!gameState || !gameState.you) return;
+  if (gameState.phase === 'KNOCK_DECISION' && gameState.you.isKnockDecisionTurn) {
+    knockResponse('counter_knock');
+  } else if (gameState.phase === 'PLAY_TRICK' && gameState.you.canKnock) {
+    knock();
+  }
+}
+window.handleTopKnock = handleTopKnock;
 
 function knockResponse(decision) {
   socket.emit('knock_response', { decision });
@@ -1613,8 +1626,30 @@ function renderGameScreen() {
 
   const announceContraBtn = document.getElementById('announceContraBtn');
   if (announceContraBtn) {
-    announceContraBtn.classList.toggle('hidden', !gameState.you || !gameState.you.canKnock);
-    announceContraBtn.textContent = '🔨 Klopfen';
+    const you = gameState.you;
+    if (!you) {
+      announceContraBtn.classList.add('hidden');
+      announceContraBtn.classList.remove('btn-contra-counter');
+    } else if (gameState.phase === 'KNOCK_DECISION') {
+      const canCounterKnock = Boolean(you.isKnockDecisionTurn && you.canKnock);
+      announceContraBtn.classList.toggle('hidden', !canCounterKnock);
+      if (canCounterKnock) {
+        announceContraBtn.classList.add('btn-contra-counter');
+        const nextStake = (gameState.currentStake || 1) + 1;
+        announceContraBtn.textContent = '🔨 Gegen (+1)';
+        announceContraBtn.title = `Gegenklopfen: Rundeneinsatz auf ${nextStake} Leben erhöhen`;
+      } else {
+        announceContraBtn.classList.remove('btn-contra-counter');
+      }
+    } else if (gameState.phase === 'PLAY_TRICK') {
+      announceContraBtn.classList.toggle('hidden', !you.canKnock);
+      announceContraBtn.classList.remove('btn-contra-counter');
+      announceContraBtn.textContent = '🔨 Klopfen';
+      announceContraBtn.title = 'Klopfen: Rundeneinsatz um 1 Leben erhöhen';
+    } else {
+      announceContraBtn.classList.add('hidden');
+      announceContraBtn.classList.remove('btn-contra-counter');
+    }
   }
 
   const fourPicsBtn = document.getElementById('declareFourPicsBtn');
@@ -2013,8 +2048,8 @@ function renderFourPicsTablePiles() {
         }
 
         const badgeText = st.isGenuine
-          ? `✓ ECHT! (#${stackNum})`
-          : `🚨 BLUFF! (#${stackNum})`;
+          ? `✓ ${stackNum} 🎴`
+          : `🚨 ${stackNum} 🎴`;
         const badgeClass = st.isGenuine ? 'badge-genuine' : 'badge-bluff';
 
         let cardsHtml = '';
@@ -2042,14 +2077,14 @@ function renderFourPicsTablePiles() {
 
         if (canChallenge) {
           stackClass += ' can-challenge';
-          badgeHtml = `<div class="laid-pile-badge badge-challenge-hint">👆 Stapel #${stackNum} prüfen</div>`;
+          badgeHtml = `<div class="laid-pile-badge badge-challenge-hint">👆 Aufdecken</div>`;
           clickAttr = `onclick="event.stopPropagation(); challengeSpecificStack(${st.id})"`;
           titleAttr = `title="Klicken zum Aufdecken & Prüfen von Stapel #${stackNum} (+1 Strafpunkt Risiko)"`;
         } else if (isMe) {
-          badgeHtml = `<div class="laid-pile-badge">Dein Stapel #${stackNum}</div>`;
+          badgeHtml = `<div class="laid-pile-badge">${stackNum} 🎴</div>`;
           titleAttr = `title="Deine abgelegten 4 Karten (Stapel #${stackNum})"`;
         } else {
-          badgeHtml = `<div class="laid-pile-badge">Stapel #${stackNum}</div>`;
+          badgeHtml = `<div class="laid-pile-badge">${stackNum} 🎴</div>`;
           titleAttr = `title="Abgelegter Stapel #${stackNum} von ${st.declarerName || 'Spieler'}"`;
         }
 
@@ -2241,7 +2276,6 @@ function handleModals() {
     } else {
       const isKnockTurn = Boolean(gameState.you && gameState.you.isKnockDecisionTurn);
       const can4Pics = Boolean(gameState.you && gameState.you.canDeclare4Pictures);
-      const canCounterKnock = Boolean(isKnockTurn && gameState.you && gameState.you.canKnock);
       const isLockActive = Boolean(gameState.you && gameState.you.fourPicturesLockActive);
 
       if (isKnockTurn || can4Pics || isLockActive) {
@@ -2259,11 +2293,6 @@ function handleModals() {
             <button class="btn-compact-raus" onclick="knockResponse('fold')" title="Rausgehen / Passen">
               Raus
             </button>
-            ${canCounterKnock ? `
-              <button class="btn-compact-gegen" onclick="knockResponse('counter_knock')" title="Gegenklopfen: Rundeneinsatz um +1 Leben erhöhen">
-                Gegen (+1)
-              </button>
-            ` : ''}
           `;
         }
 

@@ -795,6 +795,24 @@ input[type="text"]:focus {
   background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
 }
 
+.btn-contra.btn-contra-counter {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  border: 1.5px solid #fecaca !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.75) !important;
+  animation: pulseContraCounter 1.4s infinite alternate ease-in-out;
+}
+
+.btn-contra.btn-contra-counter:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+}
+
+@keyframes pulseContraCounter {
+  0% { transform: scale(1); box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+  100% { transform: scale(1.05); box-shadow: 0 0 14px rgba(239, 68, 68, 0.9); }
+}
+
 .status-ticker {
   font-size: 0.72rem;
   color: #cbd5e1;
@@ -1267,16 +1285,29 @@ input[type="text"]:focus {
 
 .trick-slot {
   position: absolute;
-  width: 66px;
-  height: 95px;
+  width: 72px;
+  height: 104px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.trick-slot.slot-top { top: 40px; }
-.trick-slot.slot-bottom { bottom: 14px; }
+.trick-slot .playing-card {
+  width: 70px;
+  height: 101px;
+}
+
+.card-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.trick-slot.slot-top { top: 36px; }
+.trick-slot.slot-bottom { bottom: 12px; }
 .trick-slot.slot-left { left: 16px; }
 .trick-slot.slot-right { right: 16px; }
 
@@ -1370,12 +1401,12 @@ input[type="text"]:focus {
   align-items: center;
 }
 .felt-table.mode-5p .trick-slot {
-  width: 60px;
-  height: 86px;
+  width: 64px;
+  height: 92px;
 }
 .felt-table.mode-5p .trick-slot .playing-card {
-  width: 58px;
-  height: 84px;
+  width: 62px;
+  height: 90px;
 }
 .felt-table.mode-5p .trick-slot.slot-top-left {
   top: 24px;
@@ -1409,13 +1440,13 @@ input[type="text"]:focus {
 
 /* 6P Trick Slots (Positionierung & saubere Skalierung ohne Überlappung) */
 .felt-table.mode-6p .trick-slot {
-  width: 58px;
-  height: 84px;
+  width: 62px;
+  height: 90px;
 }
 
 .felt-table.mode-6p .trick-slot .playing-card {
-  width: 56px;
-  height: 82px;
+  width: 60px;
+  height: 87px;
 }
 
 .felt-table.mode-6p .trick-slot.slot-top {
@@ -2107,7 +2138,7 @@ input[type="text"]:focus {
 
 .my-hand-container {
   width: 100%;
-  height: 115px;
+  height: 122px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -2123,7 +2154,9 @@ input[type="text"]:focus {
 }
 
 .my-hand-fan .playing-card {
-  margin: 0 -10px;
+  width: 76px;
+  height: 110px;
+  margin: 0 -8px;
   transform-origin: bottom center;
 }
 
@@ -3555,13 +3588,14 @@ input:checked + .slider:before {
   }
 
   .trick-slot {
-    width: 56px;
-    height: 82px;
+    width: 68px;
+    height: 98px;
   }
 
+  .trick-slot .playing-card,
   .trick-slot .card-face {
-    width: 56px;
-    height: 82px;
+    width: 66px;
+    height: 95px;
   }
 
   .player-avatar-box {
@@ -3657,13 +3691,13 @@ input:checked + .slider:before {
   .felt-table {
     border-radius: 20px;
     border-width: 4px;
-    grid-template-rows: 46px 1fr 115px;
+    grid-template-rows: 46px 1fr minmax(122px, auto);
     grid-template-columns: 70px 1fr 70px;
   }
 
   /* 5P Modus auf Mobile (Karten sauber neben den Spielern platziert) */
   .felt-table.mode-5p {
-    grid-template-rows: 46px 1fr 115px;
+    grid-template-rows: 46px 1fr minmax(122px, auto);
     grid-template-columns: 72px 1fr 72px;
   }
   .felt-table.mode-5p .player-top-left {
@@ -3687,20 +3721,20 @@ input:checked + .slider:before {
     right: 4px;
   }
   .felt-table.mode-5p .trick-slot {
-    width: 48px;
-    height: 70px;
+    width: 52px;
+    height: 75px;
   }
   .felt-table.mode-5p .trick-slot .playing-card {
-    width: 46px;
-    height: 68px;
+    width: 50px;
+    height: 73px;
   }
   .felt-table.mode-5p .trick-slot.slot-top-left {
-    top: 22px;
+    top: 20px;
     left: calc(50% - 56px);
     transform: translateX(-50%);
   }
   .felt-table.mode-5p .trick-slot.slot-top-right {
-    top: 22px;
+    top: 20px;
     left: calc(50% + 56px);
     transform: translateX(-50%);
   }
@@ -3718,14 +3752,14 @@ input:checked + .slider:before {
     transform: translateY(-50%);
   }
   .felt-table.mode-5p .trick-slot.slot-bottom {
-    bottom: 6px;
+    bottom: 42px;
     left: 50%;
     transform: translateX(-50%);
   }
 
   /* 6P Modus auf Mobile */
   .felt-table.mode-6p {
-    grid-template-rows: 46px 1fr 115px;
+    grid-template-rows: 46px 1fr minmax(120px, auto);
     grid-template-columns: 74px 1fr 74px;
   }
 
@@ -3754,41 +3788,41 @@ input:checked + .slider:before {
   }
 
   .felt-table.mode-6p .trick-slot {
-    width: 46px;
-    height: 66px;
+    width: 50px;
+    height: 72px;
   }
 
   .felt-table.mode-6p .trick-slot .playing-card {
-    width: 44px;
-    height: 64px;
+    width: 48px;
+    height: 70px;
   }
 
   .felt-table.mode-6p .trick-slot.slot-top {
-    top: 20px;
+    top: 18px;
     left: 50%;
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-top-left {
-    top: 26px;
+    top: 24px;
     left: calc(50% - 56px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-top-right {
-    top: 26px;
+    top: 24px;
     left: calc(50% + 56px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom-left {
-    bottom: 10px;
+    bottom: 42px;
     left: calc(50% - 64px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom-right {
-    bottom: 10px;
+    bottom: 42px;
     left: calc(50% + 64px);
     transform: translateX(-50%);
   }
@@ -3798,23 +3832,23 @@ input:checked + .slider:before {
     margin: 1px 0;
   }
   .four-pics-stacks-row {
-    gap: 4px;
+    gap: 3px;
   }
   .four-pics-single-stack {
-    padding: 2px 4px;
+    padding: 2px 3px;
     margin-top: 2px;
     border-radius: 6px;
   }
   .laid-card-item {
-    width: 20px;
-    height: 30px;
-    margin-left: -13px;
+    width: 19px;
+    height: 28px;
+    margin-left: -14px;
   }
   .laid-card-back {
-    font-size: 0.52rem;
+    font-size: 0.5rem;
   }
   .laid-pile-badge {
-    font-size: 0.5rem;
+    font-size: 0.52rem;
     padding: 1px 4px;
     top: -8px;
     border-radius: 4px;
@@ -3826,13 +3860,13 @@ input:checked + .slider:before {
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom {
-    bottom: 4px;
+    bottom: 38px;
     left: 50%;
     transform: translateX(-50%);
   }
 
   .felt-table {
-    grid-template-rows: 50px 1fr minmax(118px, auto);
+    grid-template-rows: 50px 1fr minmax(122px, auto);
     grid-template-columns: 62px minmax(0, 1fr) 62px;
   }
 
@@ -3862,19 +3896,19 @@ input:checked + .slider:before {
   }
 
   .playing-card {
-    width: 52px;
-    height: 75px;
+    width: 56px;
+    height: 81px;
     border-radius: 6px;
   }
 
   .my-hand-container {
-    height: 108px;
+    height: 116px;
   }
 
   .my-hand-fan .playing-card {
-    width: 58px;
-    height: 84px;
-    margin: 0 -3px;
+    width: 66px;
+    height: 96px;
+    margin: 0 -4px;
     touch-action: manipulation;
   }
 
@@ -3888,6 +3922,11 @@ input:checked + .slider:before {
 
   .my-hand-fan[data-card-count="1"] .playing-card {
     margin: 0;
+  }
+
+  .my-hand-fan .playing-card:not(.disabled):hover,
+  .my-hand-fan .playing-card:not(.disabled):active {
+    transform: translateY(-16px) scale(1.06) !important;
   }
 
   .trick-banner {
@@ -3924,13 +3963,13 @@ input:checked + .slider:before {
   }
 
   .trick-slot {
-    width: 64px;
-    height: 92px;
+    width: 66px;
+    height: 96px;
   }
 
   .trick-slot .playing-card {
-    width: 62px;
-    height: 90px;
+    width: 64px;
+    height: 93px;
   }
 
   .trick-multi-cards-group .playing-card {
@@ -3950,7 +3989,7 @@ input:checked + .slider:before {
     font-size: 0.72rem;
   }
   .trick-slot.slot-bottom {
-    bottom: 8px;
+    bottom: 40px;
     left: 50%;
     transform: translateX(-50%);
   }
@@ -4080,27 +4119,6 @@ input:checked + .slider:before {
     border-radius: 8px;
     box-sizing: border-box;
   }
-
-  .four-pics-stacks-row {
-    gap: 5px;
-  }
-
-  .four-pics-single-stack {
-    padding: 2px 3px;
-  }
-
-  .laid-card-item {
-    width: 22px;
-    height: 34px;
-    margin-left: -11px;
-  }
-
-  .four-pics-single-stack.is-revealed .laid-card-item,
-  .four-pics-table-pile.is-revealed .laid-card-item {
-    width: 36px;
-    height: 52px;
-    margin-left: -8px;
-  }
 }
 
 @media (max-width: 400px) {
@@ -4109,7 +4127,7 @@ input:checked + .slider:before {
   }
 
   .felt-table {
-    grid-template-rows: 48px 1fr minmax(114px, auto);
+    grid-template-rows: 48px 1fr minmax(116px, auto);
     grid-template-columns: 56px minmax(0, 1fr) 56px;
   }
 
@@ -4136,6 +4154,32 @@ input:checked + .slider:before {
     box-sizing: border-box;
   }
 
+  .four-pics-stacks-row {
+    gap: 2px;
+  }
+
+  .four-pics-single-stack {
+    padding: 1px 2px;
+    margin-top: 1px;
+  }
+
+  .laid-card-item {
+    width: 17px;
+    height: 25px;
+    margin-left: -13px;
+  }
+
+  .laid-card-back {
+    font-size: 0.46rem;
+  }
+
+  .four-pics-single-stack.is-revealed .laid-card-item,
+  .four-pics-table-pile.is-revealed .laid-card-item {
+    width: 28px;
+    height: 40px;
+    margin-left: -7px;
+  }
+
   .mit-field-notification,
   .contra-field-notification,
   .contra-re-field-notification,
@@ -4154,18 +4198,18 @@ input:checked + .slider:before {
   }
 
   .playing-card {
-    width: 46px;
-    height: 67px;
+    width: 52px;
+    height: 75px;
   }
 
   .my-hand-container {
-    height: 102px;
+    height: 110px;
   }
 
   .my-hand-fan .playing-card {
-    width: 56px;
-    height: 81px;
-    margin: 0 -3px;
+    width: 62px;
+    height: 90px;
+    margin: 0 -4px;
     touch-action: manipulation;
   }
 
@@ -4181,6 +4225,11 @@ input:checked + .slider:before {
     margin: 0;
   }
 
+  .my-hand-fan .playing-card:not(.disabled):hover,
+  .my-hand-fan .playing-card:not(.disabled):active {
+    transform: translateY(-14px) scale(1.05) !important;
+  }
+
   .trick-banner {
     top: 1px;
     padding: 2px 8px;
@@ -4188,13 +4237,13 @@ input:checked + .slider:before {
   }
 
   .trick-slot {
-    width: 56px;
-    height: 81px;
+    width: 60px;
+    height: 87px;
   }
 
   .trick-slot .playing-card {
-    width: 54px;
-    height: 79px;
+    width: 58px;
+    height: 84px;
   }
 
   .trick-multi-cards-group .playing-card {
@@ -4208,7 +4257,7 @@ input:checked + .slider:before {
     transform: translateX(-50%);
   }
   .trick-slot.slot-bottom {
-    bottom: 6px;
+    bottom: 38px;
     left: 50%;
     transform: translateX(-50%);
   }
@@ -4334,7 +4383,7 @@ input:checked + .slider:before {
     transform: translateX(-50%);
   }
   .felt-table.mode-5p .trick-slot.slot-bottom {
-    bottom: 2px;
+    bottom: 38px;
     left: 50%;
     transform: translateX(-50%);
   }
@@ -4392,19 +4441,19 @@ input:checked + .slider:before {
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom-left {
-    bottom: 14px;
+    bottom: 38px;
     left: calc(50% - 62px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom-right {
-    bottom: 14px;
+    bottom: 38px;
     left: calc(50% + 62px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom {
-    bottom: 2px;
+    bottom: 34px;
     left: 50%;
     transform: translateX(-50%);
   }
@@ -4574,7 +4623,7 @@ input:checked + .slider:before {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -4583,13 +4632,13 @@ input:checked + .slider:before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
-  border-radius: 10px;
+  padding: 3px 5px;
+  border-radius: 8px;
   cursor: default;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(192, 132, 252, 0.35);
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .four-pics-single-stack.can-challenge {
@@ -4610,8 +4659,8 @@ input:checked + .slider:before {
   background: rgba(15, 23, 42, 0.95);
   border: 2px solid #f59e0b;
   box-shadow: 0 0 24px rgba(245, 158, 11, 0.8);
-  padding: 6px 10px;
-  transform: scale(1.1);
+  padding: 5px 8px;
+  transform: scale(1.06);
   z-index: 45;
 }
 
@@ -4627,10 +4676,10 @@ input:checked + .slider:before {
   transform: translateX(-50%);
   background: #c084fc;
   color: #1e1b4b;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 8px;
+  padding: 2px 6px;
+  border-radius: 7px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   pointer-events: none;
@@ -4675,9 +4724,9 @@ input:checked + .slider:before {
 }
 
 .laid-card-item {
-  width: 28px;
-  height: 42px;
-  margin-left: -14px;
+  width: 24px;
+  height: 35px;
+  margin-left: -17px;
   border-radius: 4px;
   transition: all 0.35s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
@@ -4696,15 +4745,15 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   color: #e9d5ff;
 }
 
 /* Aufgedeckte Karten */
 .four-pics-single-stack.is-revealed .laid-card-item,
 .four-pics-table-pile.is-revealed .laid-card-item {
-  width: 44px;
-  height: 64px;
+  width: 38px;
+  height: 55px;
   margin-left: -10px;
   animation: flipCardRevealed 0.4s ease forwards;
 }
