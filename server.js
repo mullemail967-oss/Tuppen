@@ -189,7 +189,7 @@ function createRoom(roomCode, hostName, hostSocketId, initialSettings) {
       allowPoverty: true,           // Alias
       kloepperStakeMode: 'fixed',   // 'fixed' (immer 2) oder 'per_player' (+1 pro Klöpper)
       allowFourPictures: true,      // 4 Bilder tauschen erlaubt
-      fourPicturesCooldownSeconds: 6, // Bedenkzeit nach 4-Bilder Ansage (4 bis 10 Sek.)
+      fourPicturesCooldownSeconds: 5, // Bedenkzeit nach 4-Bilder Ansage (0 bis 10 Sek., Standard 5)
       allowBlindKnock: true,        // Blindklopfen vor Stich 1 erlaubt
       trickDisplaySeconds: 2.5,     // Anzeigedauer des fertigen Stichs
       dealAndTurnDelaySeconds: 1.0, // Pause bei Bot-Zügen
@@ -1657,20 +1657,32 @@ function handleDeclareFourPictures(room, playerIndex) {
   sortHand(room.hands[playerIndex]);
 
   // Cooldown setzen (vor dem ersten Stich kann für X Sekunden niemand ausspielen)
-  const cooldownSec = room.settings.fourPicturesCooldownSeconds || 6;
-  room.fourPicturesLockUntil = Date.now() + (cooldownSec * 1000);
+  const cooldownSec = (typeof room.settings.fourPicturesCooldownSeconds === 'number') ? room.settings.fourPicturesCooldownSeconds : 5;
+  if (cooldownSec > 0) {
+    room.fourPicturesLockUntil = Date.now() + (cooldownSec * 1000);
+  } else {
+    room.fourPicturesLockUntil = 0;
+  }
 
   const playerStacks = room.fourPicturesStacks.filter(s => s.declarerIndex === playerIndex);
   logAction(room, `🎴 ${playerName} erklärt 4 BILDER (Stapel #${playerStacks.length}) und tauscht 4 Karten!`);
-  logAction(room, `⏱️ Bedenkzeit: ${cooldownSec}s bis zum Ausspiel. Mitspieler können auf einen Stapel tippen zum Prüfen!`);
+  if (cooldownSec > 0) {
+    logAction(room, `⏱️ Bedenkzeit: ${cooldownSec}s bis zum Ausspiel. Mitspieler können auf einen Stapel tippen zum Prüfen!`);
+  } else {
+    logAction(room, `⏱️ Sofortiges Ausspiel (0s Bedenkzeit). Mitspieler können auf einen Stapel tippen zum Prüfen!`);
+  }
 
   broadcastGameState(room);
 
   if (room.botTimer) clearTimeout(room.botTimer);
-  room.botTimer = setTimeout(() => {
-    const currentRoom = rooms.get(room.code);
-    if (currentRoom) checkBotAction(currentRoom);
-  }, (cooldownSec * 1000) + 200);
+  if (cooldownSec > 0) {
+    room.botTimer = setTimeout(() => {
+      const currentRoom = rooms.get(room.code);
+      if (currentRoom) checkBotAction(currentRoom);
+    }, (cooldownSec * 1000) + 200);
+  } else {
+    checkBotAction(room);
+  }
 }
 
 /**
@@ -2025,7 +2037,7 @@ io.on('connection', (socket) => {
       if (typeof settings.allowFourPictures === 'boolean') {
         room.settings.allowFourPictures = settings.allowFourPictures;
       }
-      if (typeof settings.fourPicturesCooldownSeconds === 'number' && settings.fourPicturesCooldownSeconds >= 4 && settings.fourPicturesCooldownSeconds <= 10) {
+      if (typeof settings.fourPicturesCooldownSeconds === 'number' && settings.fourPicturesCooldownSeconds >= 0 && settings.fourPicturesCooldownSeconds <= 10) {
         room.settings.fourPicturesCooldownSeconds = Math.round(settings.fourPicturesCooldownSeconds);
       }
       if (typeof settings.allowBlindKnock === 'boolean') {
@@ -2114,13 +2126,15 @@ io.on('connection', (socket) => {
 
     const seatedCount = room.seats.filter(s => s !== null).length;
     const botSeats = room.seats.filter(s => s && s.isBot);
-    const canSpectate = (seatedCount < 6);
+    const waitingSpectatorsCount = (room.spectators || []).length;
+    const canSpectate = ((seatedCount + waitingSpectatorsCount) < 6);
 
     if (botSeats.length === 0 && !canSpectate) {
       return requesterSocket.emit('error_message', 'Diese Partie ist voll (6 von 6 Spielern am Tisch).');
     }
 
     const asSpectator = (botSeats.length === 0);
+    const nextPlayerNumber = seatedCount + waitingSpectatorsCount + 1;
     const reqName = (pName || 'Gast').trim().slice(0, 15);
     const hostSocket = io.sockets.sockets.get(room.hostSocketId);
     if (!hostSocket) return requesterSocket.emit('error_message', 'Spielleiter nicht erreichbar.');
@@ -2132,6 +2146,8 @@ io.on('connection', (socket) => {
       playerName: reqName,
       socketId: requesterSocket.id,
       asSpectator,
+      canSpectate,
+      nextPlayerNumber,
       timestamp: Date.now()
     });
 
@@ -2154,6 +2170,8 @@ io.on('connection', (socket) => {
       requestId,
       playerName: reqName,
       asSpectator,
+      canSpectate,
+      nextPlayerNumber,
       availableBots
     });
 
@@ -2185,8 +2203,8 @@ io.on('connection', (socket) => {
       return socket.emit('join_request_resolved', { requestId, status: 'rejected' });
     }
 
-    // Wenn als Zuschauer angenommen oder kein gültiger Bot-Sitz
-    if (req.asSpectator || targetSeat === -1 || typeof targetSeat !== 'number') {
+    // Wenn als Zuschauer angenommen (targetSeat === -1 oder ungültig)
+    if (targetSeat === -1 || typeof targetSeat !== 'number') {
       if (requesterSocket) {
         const specName = req.playerName.trim().slice(0, 15);
         if (!room.spectators) room.spectators = [];
@@ -2205,7 +2223,9 @@ io.on('connection', (socket) => {
         requesterSocket.join(room.code);
         requesterSocket.emit('join_request_accepted_spectator', { roomCode: room.code, name: specName });
         requesterSocket.emit('spectator_joined', { roomCode: room.code, isSpectator: true, name: specName });
-        logAction(room, `👁️ ${specName} schaut als Zuschauer zu und steigt zur nächsten Partie ein!`);
+        const curSeated = room.seats.filter(s => s !== null).length;
+        const totalWithSpec = curSeated + room.spectators.length;
+        logAction(room, `👁️ ${specName} schaut als Zuschauer zu und steigt zur nächsten Partie als ${totalWithSpec}. Spieler ein!`);
         socket.emit('join_request_resolved', { requestId, status: 'accepted', asSpectator: true, playerName: specName });
         broadcastGameState(room);
         broadcastPublicRooms();
@@ -2651,7 +2671,7 @@ io.on('connection', (socket) => {
       if (typeof settings.allowFourPictures === 'boolean') {
         room.settings.allowFourPictures = settings.allowFourPictures;
       }
-      if (typeof settings.fourPicturesCooldownSeconds === 'number' && settings.fourPicturesCooldownSeconds >= 4 && settings.fourPicturesCooldownSeconds <= 10) {
+      if (typeof settings.fourPicturesCooldownSeconds === 'number' && settings.fourPicturesCooldownSeconds >= 0 && settings.fourPicturesCooldownSeconds <= 10) {
         room.settings.fourPicturesCooldownSeconds = Math.round(settings.fourPicturesCooldownSeconds);
       }
       if (typeof settings.allowBlindKnock === 'boolean') {

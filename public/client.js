@@ -16,6 +16,16 @@ let gameState = null;
 let soundEnabled = true;
 let svgSpriteLoaded = false;
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Audio-Synthesizer via Web Audio API (Lazy Init on Mobile)
 let audioCtx = null;
 function getAudioContext() {
@@ -865,16 +875,17 @@ socket.on('join_request_accepted_spectator', ({ roomCode, name }) => {
   socket.emit('confirm_spectator_joined', { roomCode });
   document.getElementById('lobbyScreen').classList.remove('active');
   document.getElementById('gameScreen').classList.add('active');
-  showToast('🎉 Anfrage angenommen! Du bist als Zuschauer dabei und steigst nächste Runde ein.');
+  showToast('🎉 Anfrage angenommen! Du bist als Zuschauer dabei und steigst zur nächsten Partie automatisch mit Karten ein.');
 });
 
 // Beim Spielleiter: Dezent registrierte Beitrittsanfragen (kein blockierendes Riesen-Popup)
 const pendingJoinRequests = new Map();
 
-socket.on('join_request_received', ({ requestId, playerName, asSpectator, availableBots }) => {
-  pendingJoinRequests.set(requestId, { requestId, playerName, asSpectator, availableBots });
+socket.on('join_request_received', ({ requestId, playerName, asSpectator, canSpectate, nextPlayerNumber, availableBots }) => {
+  pendingJoinRequests.set(requestId, { requestId, playerName, asSpectator, canSpectate, nextPlayerNumber, availableBots });
   playSound('trump_fanfare');
-  showToast(asSpectator ? `👁️ ${playerName} möchte zuschauen & mitspielen (👑 Menü)` : `🙋 ${playerName} möchte mitspielen (👑 Menü)`);
+  const numInfo = nextPlayerNumber ? ` (Platz ${nextPlayerNumber})` : '';
+  showToast(`🙋 ${playerName} möchte beitreten${numInfo} (👑 Menü)`);
   updateHostMenuBadge();
   const hostModal = document.getElementById('hostControlModal');
   if (hostModal && !hostModal.classList.contains('hidden')) {
@@ -1021,57 +1032,73 @@ function renderHostPendingRequests() {
 
     const header = document.createElement('div');
     header.className = 'host-req-card-header';
-
-    if (req.asSpectator || !req.availableBots || req.availableBots.length === 0) {
-      header.innerHTML = `<span class="host-req-card-title">👁️ <strong>${req.playerName}</strong> möchte als Zuschauer zusehen & nächste Runde mitspielen:</span>`;
-      card.appendChild(header);
-
-      const specRow = document.createElement('div');
-      specRow.style.cssText = 'display:flex; gap:8px; margin-top:6px; align-items:center;';
-
-      const acceptBtn = document.createElement('button');
-      acceptBtn.type = 'button';
-      acceptBtn.className = 'btn btn-sm btn-primary';
-      acceptBtn.innerHTML = '✓ Annehmen';
-      acceptBtn.onclick = () => resolveJoinRequest(req.requestId, true, -1);
-      specRow.appendChild(acceptBtn);
-
-      const rejectBtn = document.createElement('button');
-      rejectBtn.type = 'button';
-      rejectBtn.className = 'btn btn-sm btn-outline btn-reject-req';
-      rejectBtn.innerHTML = '✕ Ablehnen';
-      rejectBtn.onclick = () => resolveJoinRequest(req.requestId, false);
-      specRow.appendChild(rejectBtn);
-
-      card.appendChild(specRow);
-      listEl.appendChild(card);
-      return;
-    }
-
-    header.innerHTML = `<span class="host-req-card-title">🙋 <strong>${req.playerName}</strong> möchte beitreten:</span>`;
+    header.innerHTML = `<span class="host-req-card-title">🙋 <strong>${escapeHtml(req.playerName)}</strong> möchte der Runde beitreten:</span>`;
     card.appendChild(header);
 
-    const botGrid = document.createElement('div');
-    botGrid.className = 'host-req-bots-grid';
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'host-req-actions';
+    actionsContainer.style.cssText = 'display:flex; flex-direction:column; gap:8px; margin-top:8px;';
 
-    (req.availableBots || []).forEach(bot => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `btn btn-sm btn-bot-replace`;
-      btn.innerHTML = `<span>🤖 <strong>${bot.name}</strong></span> <span class="badge-team-role">(${bot.name})</span> <small>ersetzen</small>`;
-      btn.onclick = () => resolveJoinRequest(req.requestId, true, bot.seatIndex);
-      botGrid.appendChild(btn);
-    });
+    const hasBots = req.availableBots && req.availableBots.length > 0;
+    const canSpectate = (req.canSpectate !== false);
 
-    card.appendChild(botGrid);
+    // Option 1: Bot sofort im laufenden Spiel ersetzen (falls Bots vorhanden)
+    if (hasBots) {
+      const botSection = document.createElement('div');
+      botSection.className = 'host-req-section';
+      botSection.innerHTML = `<div style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-bottom:4px;">🤖 Sofort einsteigen & Bot ersetzen:</div>`;
 
+      const botGrid = document.createElement('div');
+      botGrid.className = 'host-req-bots-grid';
+      req.availableBots.forEach(bot => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-bot-replace';
+        btn.innerHTML = `<span>🤖 <strong>${escapeHtml(bot.name)}</strong></span> <small>ersetzen</small>`;
+        btn.onclick = () => resolveJoinRequest(req.requestId, true, bot.seatIndex);
+        botGrid.appendChild(btn);
+      });
+      botSection.appendChild(botGrid);
+      actionsContainer.appendChild(botSection);
+    }
+
+    // Option 2: Als Zuschauer vormerken (steigt zur nächsten Partie als weiterer Spieler ein)
+    if (canSpectate) {
+      const specSection = document.createElement('div');
+      specSection.className = 'host-req-section';
+      const playerNumText = req.nextPlayerNumber ? `als ${req.nextPlayerNumber}. Spieler` : 'als weiterer Spieler';
+      specSection.innerHTML = `<div style="font-size:0.78rem; font-weight:600; color:var(--text-muted); margin-bottom:4px;">👁️ Als Zuschauer vormerken (${playerNumText} in der nächsten Partie):</div>`;
+
+      const specBtn = document.createElement('button');
+      specBtn.type = 'button';
+      specBtn.className = 'btn btn-sm btn-primary';
+      specBtn.style.cssText = 'width:100%; text-align:center; padding:7px 10px; font-weight:600;';
+      specBtn.innerHTML = `<span>👁️ Als Zuschauer annehmen (${playerNumText})</span>`;
+      specBtn.onclick = () => resolveJoinRequest(req.requestId, true, -1);
+      specSection.appendChild(specBtn);
+      actionsContainer.appendChild(specSection);
+    }
+
+    // Falls weder Bot noch Zuschauerplatz frei
+    if (!hasBots && !canSpectate) {
+      const fullNotice = document.createElement('div');
+      fullNotice.style.cssText = 'color:var(--danger); font-size:0.85rem; font-weight:600;';
+      fullNotice.textContent = '⚠️ Kein freier Platz am Tisch (maximal 6 Spieler erreicht).';
+      actionsContainer.appendChild(fullNotice);
+    }
+
+    // Option 3: Ablehnen
+    const rejectRow = document.createElement('div');
+    rejectRow.style.cssText = 'margin-top:4px; display:flex; justify-content:flex-end;';
     const rejectBtn = document.createElement('button');
     rejectBtn.type = 'button';
-    rejectBtn.className = 'btn btn-xs btn-reject-req';
+    rejectBtn.className = 'btn btn-xs btn-outline btn-reject-req';
     rejectBtn.innerHTML = '✕ Ablehnen';
     rejectBtn.onclick = () => resolveJoinRequest(req.requestId, false);
-    card.appendChild(rejectBtn);
+    rejectRow.appendChild(rejectBtn);
+    actionsContainer.appendChild(rejectRow);
 
+    card.appendChild(actionsContainer);
     listEl.appendChild(card);
   });
 }
@@ -1121,15 +1148,15 @@ socket.on('mit_announced', ({ playerName, seatIndex }) => {
   playSound('trump_fanfare');
 });
 
-// Auffälliges Banner im Spielfeld, wenn jemand Klopft
+// Schlankes Banner im Spielfeld, wenn jemand klopft: "Name hat 🔨"
 let contraNotificationTimer = null;
-socket.on('knock_announced', ({ knockerName, knockerIndex, newStake }) => {
+socket.on('knock_announced', ({ knockerName, knockerIndex }) => {
   const banner = document.getElementById('contraFieldNotification');
   const textEl = document.getElementById('contraPopText');
   if (banner && textEl) {
     const isMe = (knockerIndex === mySeatIndex);
-    const displayName = isMe ? `${knockerName} (Du)` : knockerName;
-    textEl.textContent = `🔨 ${displayName} hat GEKLOPFT! (Einsatz: ${newStake} Pkt)`;
+    const msg = isMe ? 'Du hast 🔨' : `${knockerName} hat 🔨`;
+    textEl.textContent = msg;
     banner.classList.remove('hidden');
     banner.classList.remove('fade-out');
 
@@ -1139,8 +1166,8 @@ socket.on('knock_announced', ({ knockerName, knockerIndex, newStake }) => {
       setTimeout(() => {
         banner.classList.add('hidden');
         banner.classList.remove('fade-out');
-      }, 500);
-    }, 2800);
+      }, 400);
+    }, 2000);
   }
   playSound('contra_sound');
 });
@@ -1150,8 +1177,8 @@ socket.on('contra_announced', ({ playerName, seatIndex }) => {
   const textEl = document.getElementById('contraPopText');
   if (banner && textEl) {
     const isMe = (seatIndex === mySeatIndex);
-    const displayName = isMe ? `${playerName} (Du)` : playerName;
-    textEl.textContent = `🔨 ${displayName} hat GEKLOPFT!`;
+    const msg = isMe ? 'Du hast 🔨' : `${playerName} hat 🔨`;
+    textEl.textContent = msg;
     banner.classList.remove('hidden');
     banner.classList.remove('fade-out');
 
@@ -1161,8 +1188,8 @@ socket.on('contra_announced', ({ playerName, seatIndex }) => {
       setTimeout(() => {
         banner.classList.add('hidden');
         banner.classList.remove('fade-out');
-      }, 500);
-    }, 2800);
+      }, 400);
+    }, 2000);
   }
   playSound('contra_sound');
 });
@@ -1760,15 +1787,8 @@ function renderTablePlayers() {
       nameEl.textContent = isMe ? `${player.name} (Du)` : player.name;
     }
 
-    // Klöpper-Pill bei 1 Leben
-    if (declarerPill) {
-      if (player.isKloepper || player.isArm || player.score === 1) {
-        declarerPill.classList.remove('hidden');
-        declarerPill.textContent = `🔨 AM KLÖPPER`;
-      } else {
-        declarerPill.classList.add('hidden');
-      }
-    }
+    // Klöpper-Pill ausblenden (verhindert dreifache redundante Anzeige und spart Platz)
+    if (declarerPill) declarerPill.classList.add('hidden');
 
     const mitPill = document.getElementById(`mitPill${key}`);
     if (mitPill) mitPill.classList.add('hidden');
@@ -1788,7 +1808,7 @@ function renderTablePlayers() {
         tagEl.textContent = '🚪 Gepasst';
         tagEl.className = 'team-tag tag-folded';
       } else if (lives === 1) {
-        tagEl.textContent = '🔨 1 Leben (Klöpper)';
+        tagEl.textContent = '❤️ 1 Leben';
         tagEl.className = 'team-tag tag-danger';
       } else {
         tagEl.textContent = `❤️ ${lives} Leben`;
@@ -1906,7 +1926,11 @@ function renderTrickCenter() {
       slot.innerHTML = createCardHTML(items[0].card, false, true);
     } else {
       slot.classList.add('has-multi-cards');
-      slot.innerHTML = items.map(it => createCardHTML(it.card, false, true)).join('');
+      slot.innerHTML = `
+        <div class="trick-multi-cards-group">
+          ${items.map(it => createCardHTML(it.card, false, true)).join('')}
+        </div>
+      `;
     }
   });
 
@@ -2188,10 +2212,10 @@ function handleModals() {
       let pButtonsHtml = `
         <span class="knock-hearts-badge" title="Klöpper-Einsatz: ${stake} Leben">${heartsStr}</span>
         <button class="btn-compact-dabei" onclick="povertyResponse('play')" title="Mitgehen (${stake} Leben)">
-          ⚔️ Dabei
+          Dabei
         </button>
         <button class="btn-compact-raus" onclick="povertyResponse('fold')" title="Passen (-1 Leben)">
-          🚪 Passen
+          Passen
         </button>
       `;
       if (can4Pics) {
@@ -2230,14 +2254,14 @@ function handleModals() {
           buttonsHtml += `
             <span class="knock-hearts-badge" title="Rundeneinsatz: ${stake} Leben">${heartsStr}</span>
             <button class="btn-compact-dabei" onclick="knockResponse('call')" title="Mitgehen (${stake} Leben)">
-              ⚔️ Dabei
+              Dabei
             </button>
             <button class="btn-compact-raus" onclick="knockResponse('fold')" title="Rausgehen / Passen">
-              🚪 Raus
+              Raus
             </button>
             ${canCounterKnock ? `
               <button class="btn-compact-gegen" onclick="knockResponse('counter_knock')" title="Gegenklopfen: Rundeneinsatz um +1 Leben erhöhen">
-                🔨 Gegen (+1)
+                Gegen (+1)
               </button>
             ` : ''}
           `;
@@ -2491,7 +2515,7 @@ function renderRoundSummary(summary) {
       col.className = `tuppen-score-col ${isWinner ? 'winner-col' : ''} ${isElim ? 'elim-col' : ''}`;
       col.innerHTML = `
         <span class="p-name">${idx === mySeatIndex ? 'Du (' + p.name + ')' : p.name}</span>
-        <span class="p-score">${newScore === 1 ? '🔨 1 Leben (Klöpper)' : `❤️ ${newScore} Leben`}</span>
+        <span class="p-score">${newScore === 1 ? '🔨 1 Leben' : `❤️ ${newScore} Leben`}</span>
         <span class="p-delta ${livesLost > 0 ? 'bad-delta' : 'good-delta'}">${livesLost > 0 ? '-' + livesLost + ' Leben' : '±0 Leben'}</span>
         ${isElim ? '<span class="elim-badge">💀 Ausgeschieden</span>' : ''}
         ${isWinner ? '<span style="font-size:0.7rem; color:#f59e0b; font-weight:700;">👑 Runden-Sieger</span>' : ''}
@@ -2651,7 +2675,7 @@ let currentSettings = {
   allowPoverty: true,
   kloepperStakeMode: 'fixed',
   allowFourPictures: true,
-  fourPicturesCooldownSeconds: 6,
+  fourPicturesCooldownSeconds: 5,
   allowBlindKnock: true,
   trickDisplaySeconds: 2.5,
   dealAndTurnDelaySeconds: 1.0,
@@ -2765,9 +2789,23 @@ function syncSettingsUI() {
     allowFourPicsInput.disabled = !isHost;
   }
 
-  // 4-Bilder Bedenkzeit Cooldown (4, 6, 8, 10s)
-  const cdVal = currentSettings.fourPicturesCooldownSeconds || 6;
-  [4, 6, 8, 10].forEach(sec => {
+  // 4-Bilder Bedenkzeit Cooldown (0 bis 10s, Standard 5s)
+  const cdVal = (typeof currentSettings.fourPicturesCooldownSeconds === 'number') ? currentSettings.fourPicturesCooldownSeconds : 5;
+  const sliderCd = document.getElementById('sliderFourPicsCooldown');
+  if (sliderCd) {
+    sliderCd.value = cdVal;
+    sliderCd.disabled = !isHost || !allowFourPicsInput || !allowFourPicsInput.checked;
+  }
+  const dispCd = document.getElementById('displayFourPicsCooldown');
+  if (dispCd) {
+    dispCd.textContent = cdVal === 0 ? '0s (Sofort)' : `${cdVal}s`;
+  }
+  const btnCdMinus = document.getElementById('btn4PicsCdMinus');
+  if (btnCdMinus) btnCdMinus.disabled = !isHost || !allowFourPicsInput || !allowFourPicsInput.checked || cdVal <= 0;
+  const btnCdPlus = document.getElementById('btn4PicsCdPlus');
+  if (btnCdPlus) btnCdPlus.disabled = !isHost || !allowFourPicsInput || !allowFourPicsInput.checked || cdVal >= 10;
+
+  [0, 3, 5, 7, 10].forEach(sec => {
     const btn = document.getElementById(`seg4PicsCd${sec}`);
     if (btn) {
       btn.classList.toggle('active', cdVal === sec);
@@ -2883,11 +2921,33 @@ function setFourPicsCooldownSetting(val) {
     showToast('Nur der Raum-Ersteller kann Einstellungen ändern.');
     return;
   }
-  currentSettings.fourPicturesCooldownSeconds = val;
+  let num = parseInt(val, 10);
+  if (isNaN(num)) num = 5;
+  if (num < 0) num = 0;
+  if (num > 10) num = 10;
+  currentSettings.fourPicturesCooldownSeconds = num;
   syncSettingsUI();
   saveRuleSettings();
 }
 window.setFourPicsCooldownSetting = setFourPicsCooldownSetting;
+
+function adjustFourPicsCooldownSetting(delta) {
+  const isHost = gameState && gameState.you ? gameState.you.isHost : true;
+  if (!isHost) {
+    showToast('Nur der Raum-Ersteller kann Einstellungen ändern.');
+    return;
+  }
+  const cur = (typeof currentSettings.fourPicturesCooldownSeconds === 'number') ? currentSettings.fourPicturesCooldownSeconds : 5;
+  setFourPicsCooldownSetting(cur + delta);
+}
+window.adjustFourPicsCooldownSetting = adjustFourPicsCooldownSetting;
+
+function onFourPicsCooldownSlider(val) {
+  const isHost = gameState && gameState.you ? gameState.you.isHost : true;
+  if (!isHost) return;
+  setFourPicsCooldownSetting(val);
+}
+window.onFourPicsCooldownSlider = onFourPicsCooldownSlider;
 
 function adjustSpeedSetting(type, delta) {
   const isHost = gameState && gameState.you ? gameState.you.isHost : true;
@@ -2948,7 +3008,7 @@ function saveRuleSettings() {
     allowPoverty: isKloepperChecked,
     kloepperStakeMode: currentSettings.kloepperStakeMode || 'fixed',
     allowFourPictures: allowFourPicsInput ? allowFourPicsInput.checked : (currentSettings.allowFourPictures !== false),
-    fourPicturesCooldownSeconds: currentSettings.fourPicturesCooldownSeconds || 6,
+    fourPicturesCooldownSeconds: (typeof currentSettings.fourPicturesCooldownSeconds === 'number') ? currentSettings.fourPicturesCooldownSeconds : 5,
     allowBlindKnock: allowBlindKnockInput ? allowBlindKnockInput.checked : (currentSettings.allowBlindKnock !== false),
     trickDisplaySeconds: (typeof currentSettings.trickDisplaySeconds === 'number') ? currentSettings.trickDisplaySeconds : 2.5,
     dealAndTurnDelaySeconds: (typeof currentSettings.dealAndTurnDelaySeconds === 'number') ? currentSettings.dealAndTurnDelaySeconds : 1.0,

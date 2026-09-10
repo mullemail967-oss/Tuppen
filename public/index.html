@@ -261,8 +261,7 @@
 
           <!-- KLOPF-BENACHRICHTIGUNG IM FREIEN TISCHBEREICH -->
           <div id="contraFieldNotification" class="contra-field-notification hidden">
-            <span class="contra-pop-icon">🔨</span>
-            <span id="contraPopText" class="contra-pop-text">Max klopft!</span>
+            <span id="contraPopText" class="contra-pop-text">Max hat 🔨</span>
           </div>
 
 
@@ -755,16 +754,29 @@
           </label>
         </div>
 
-        <!-- 5. 4-Bilder Bedenkzeit (Cooldown vor Ausspiel) -->
+        <!-- 5. 4-Bilder Bedenkzeit (Cooldown vor Ausspiel: 0 bis 10 Sek.) -->
         <div class="setting-item setting-item-stacked" id="settingFourPicsCooldownRow">
           <div class="setting-info">
-            <span class="setting-title">⏱️ 4-Bilder Bedenkzeit</span>
-            <span class="setting-desc">Wie viele Sekunden darf nach einer 4-Bilder-Ansage noch nicht ausgespielt werden, damit Mitspieler in Ruhe prüfen können?</span>
+            <span class="setting-title">⏱️ 4-Bilder Bedenkzeit (0 bis 10 Sek.)</span>
+            <span class="setting-desc">Wie viele Sekunden darf nach einer 4-Bilder-Ansage noch nicht ausgespielt werden, damit Mitspieler in Ruhe prüfen können? (0s = Sofort weiter, Standard: 5s)</span>
           </div>
-          <div class="segmented-control" id="settingFourPicsCooldownGroup">
-            <button type="button" class="seg-btn" id="seg4PicsCd4" onclick="setFourPicsCooldownSetting(4)">4s <small>(Schnell)</small></button>
-            <button type="button" class="seg-btn active" id="seg4PicsCd6" onclick="setFourPicsCooldownSetting(6)">6s <small>(Standard)</small></button>
-            <button type="button" class="seg-btn" id="seg4PicsCd8" onclick="setFourPicsCooldownSetting(8)">8s</button>
+          <div class="speed-inputs-row" style="margin-top: 8px; display: flex; gap: 12px; align-items: center;">
+            <div class="speed-input-col" style="flex: 0 0 auto;">
+              <div class="stepper-input">
+                <button type="button" class="btn-stepper" id="btn4PicsCdMinus" onclick="adjustFourPicsCooldownSetting(-1)">-</button>
+                <span id="displayFourPicsCooldown" class="speed-val">5s</span>
+                <button type="button" class="btn-stepper" id="btn4PicsCdPlus" onclick="adjustFourPicsCooldownSetting(1)">+</button>
+              </div>
+            </div>
+            <div style="flex: 1; display: flex; align-items: center;">
+              <input type="range" id="sliderFourPicsCooldown" min="0" max="10" step="1" value="5" style="width: 100%; cursor: pointer;" oninput="onFourPicsCooldownSlider(this.value)">
+            </div>
+          </div>
+          <div class="segmented-control" id="settingFourPicsCooldownGroup" style="margin-top: 8px;">
+            <button type="button" class="seg-btn" id="seg4PicsCd0" onclick="setFourPicsCooldownSetting(0)">0s <small>(Aus)</small></button>
+            <button type="button" class="seg-btn" id="seg4PicsCd3" onclick="setFourPicsCooldownSetting(3)">3s <small>(Schnell)</small></button>
+            <button type="button" class="seg-btn active" id="seg4PicsCd5" onclick="setFourPicsCooldownSetting(5)">5s <small>(Standard)</small></button>
+            <button type="button" class="seg-btn" id="seg4PicsCd7" onclick="setFourPicsCooldownSetting(7)">7s</button>
             <button type="button" class="seg-btn" id="seg4PicsCd10" onclick="setFourPicsCooldownSetting(10)">10s <small>(Gemütlich)</small></button>
           </div>
         </div>

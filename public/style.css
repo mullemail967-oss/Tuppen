@@ -914,7 +914,7 @@ input[type="text"]:focus {
   box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8), 0 10px 40px rgba(0, 0, 0, 0.9);
   position: relative;
   display: grid;
-  grid-template-rows: 52px 1fr 135px;
+  grid-template-rows: 52px 1fr minmax(135px, auto);
   grid-template-columns: minmax(70px, 95px) minmax(0, 1fr) minmax(70px, 95px);
   grid-template-areas:
     ". top ."
@@ -1378,30 +1378,34 @@ input[type="text"]:focus {
   height: 84px;
 }
 .felt-table.mode-5p .trick-slot.slot-top-left {
-  top: 28px;
-  left: calc(50% - 68px);
+  top: 24px;
+  left: calc(50% - 72px);
   transform: translateX(-50%);
 }
 .felt-table.mode-5p .trick-slot.slot-top-right {
-  top: 28px;
-  left: calc(50% + 68px);
+  top: 24px;
+  left: calc(50% + 72px);
   transform: translateX(-50%);
 }
 .felt-table.mode-5p .trick-slot.slot-bottom-left {
-  bottom: 22px;
-  left: calc(50% - 88px);
-  transform: translateX(-50%);
+  top: 50%;
+  bottom: auto;
+  left: calc(50% - 94px);
+  transform: translateY(-50%);
 }
 .felt-table.mode-5p .trick-slot.slot-bottom-right {
-  bottom: 22px;
-  left: calc(50% + 88px);
-  transform: translateX(-50%);
+  top: 50%;
+  bottom: auto;
+  right: calc(50% - 94px);
+  left: auto;
+  transform: translateY(-50%);
 }
 .felt-table.mode-5p .trick-slot.slot-bottom {
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
 }
+
 
 /* 6P Trick Slots (Positionierung & saubere Skalierung ohne Überlappung) */
 .felt-table.mode-6p .trick-slot {
@@ -1565,19 +1569,19 @@ input[type="text"]:focus {
   animation: pulseGold 1.5s infinite ease-in-out;
 }
 
-/* Auffälliges Spielfeld-Popup bei Kontra-Ansage im oberen freien Bereich */
+/* Minimalistisches, kompaktes Spielfeld-Popup bei Klopfen / Kontra */
 .contra-field-notification {
   position: absolute;
-  top: 54px;
+  top: 48px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, rgba(38, 8, 8, 0.97) 0%, rgba(65, 14, 14, 0.98) 100%);
-  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, rgba(38, 8, 8, 0.95) 0%, rgba(65, 14, 14, 0.96) 100%);
+  border: 1.5px solid #ef4444;
   color: #fecaca;
   font-weight: 800;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 0.84rem;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 0.8rem;
   white-space: nowrap;
   max-width: 90%;
   box-sizing: border-box;
@@ -1585,12 +1589,12 @@ input[type="text"]:focus {
   text-overflow: ellipsis;
   z-index: 50;
   pointer-events: none;
-  box-shadow: 0 0 25px rgba(239, 68, 68, 0.9), 0 8px 30px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 10px rgba(239, 68, 68, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  animation: mitNotificationPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  gap: 6px;
+  animation: mitNotificationPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
@@ -1823,16 +1827,19 @@ input[type="text"]:focus {
   background: rgba(147, 51, 234, 0.22);
   border: 1px solid #c084fc;
   color: #f3e8ff;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  box-sizing: border-box;
 }
 
 .btn-four-pics-compact:hover {
@@ -1847,46 +1854,59 @@ input[type="text"]:focus {
 }
 
 .knock-stake-badge {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.15);
   border: 1px solid rgba(251, 191, 36, 0.35);
-  padding: 3px 8px;
-  border-radius: 6px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
   white-space: nowrap;
   margin-right: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 /* Minimalistische Klopf-Aktionsbuttons & Herzen-Badge */
 .knock-hearts-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.4);
-  padding: 3px 8px;
-  border-radius: 9999px;
-  font-size: 0.82rem;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.84rem;
   font-weight: 800;
   color: #fca5a5;
   letter-spacing: 0.5px;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
   user-select: none;
+  box-sizing: border-box;
 }
 
 .btn-compact-dabei {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  padding: 4px 11px;
-  border-radius: 7px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border-radius: 8px;
   border: 1px solid rgba(16, 185, 129, 0.6);
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
   cursor: pointer;
   transition: all 0.18s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .btn-compact-dabei:hover {
@@ -1902,14 +1922,19 @@ input[type="text"]:focus {
 .btn-compact-raus {
   background: rgba(255, 255, 255, 0.08);
   color: #cbd5e1;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  padding: 4px 11px;
-  border-radius: 7px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: all 0.18s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .btn-compact-raus:hover {
@@ -1926,15 +1951,20 @@ input[type="text"]:focus {
 .btn-compact-gegen {
   background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  padding: 4px 11px;
-  border-radius: 7px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border-radius: 8px;
   border: 1px solid rgba(239, 68, 68, 0.8);
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
   cursor: pointer;
   transition: all 0.18s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   animation: pulseRedGegen 1.4s infinite alternate;
 }
 
@@ -2115,22 +2145,71 @@ input[type="text"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 12px;
   z-index: 200;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .modal-card {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   border-radius: 24px;
-  padding: 24px;
+  padding: 22px;
   max-width: 480px;
   width: 100%;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-sizing: border-box;
+}
+
+#roundSummaryModal .modal-card,
+#gameOverModal .modal-card {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 18px 16px;
+}
+
+#roundSummaryModal .modal-header,
+#gameOverModal .modal-header {
+  flex-shrink: 0;
+}
+
+#roundSummaryModal .summary-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#roundSummaryModal .summary-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+#roundSummaryModal .summary-body::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+#roundSummaryModal .summary-body::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.5);
+  border-radius: 4px;
+}
+
+#roundSummaryModal .modal-actions,
+#gameOverModal .modal-actions {
+  flex-shrink: 0;
+  padding-top: 6px;
 }
 
 @keyframes modalScaleUp {
@@ -3170,6 +3249,9 @@ input:checked + .slider:before {
   border-radius: 10px;
   padding: 6px 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  max-height: 180px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .drinking-sip-row {
@@ -3579,73 +3661,168 @@ input:checked + .slider:before {
     grid-template-columns: 70px 1fr 70px;
   }
 
+  /* 5P Modus auf Mobile (Karten sauber neben den Spielern platziert) */
+  .felt-table.mode-5p {
+    grid-template-rows: 46px 1fr 115px;
+    grid-template-columns: 72px 1fr 72px;
+  }
+  .felt-table.mode-5p .player-top-left {
+    top: 6px;
+    left: 12%;
+  }
+  .felt-table.mode-5p .player-top-right {
+    top: 6px;
+    right: 12%;
+  }
+  .felt-table.mode-5p .player-bottom-left {
+    top: 48%;
+    transform: translateY(-50%);
+    bottom: auto;
+    left: 4px;
+  }
+  .felt-table.mode-5p .player-bottom-right {
+    top: 48%;
+    transform: translateY(-50%);
+    bottom: auto;
+    right: 4px;
+  }
+  .felt-table.mode-5p .trick-slot {
+    width: 48px;
+    height: 70px;
+  }
+  .felt-table.mode-5p .trick-slot .playing-card {
+    width: 46px;
+    height: 68px;
+  }
+  .felt-table.mode-5p .trick-slot.slot-top-left {
+    top: 22px;
+    left: calc(50% - 56px);
+    transform: translateX(-50%);
+  }
+  .felt-table.mode-5p .trick-slot.slot-top-right {
+    top: 22px;
+    left: calc(50% + 56px);
+    transform: translateX(-50%);
+  }
+  .felt-table.mode-5p .trick-slot.slot-bottom-left {
+    top: 48%;
+    bottom: auto;
+    left: calc(50% - 74px);
+    transform: translateY(-50%);
+  }
+  .felt-table.mode-5p .trick-slot.slot-bottom-right {
+    top: 48%;
+    bottom: auto;
+    right: calc(50% - 74px);
+    left: auto;
+    transform: translateY(-50%);
+  }
+  .felt-table.mode-5p .trick-slot.slot-bottom {
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* 6P Modus auf Mobile */
   .felt-table.mode-6p {
     grid-template-rows: 46px 1fr 115px;
-    grid-template-columns: 80px 1fr 80px;
+    grid-template-columns: 74px 1fr 74px;
   }
 
   .felt-table.mode-6p .player-top-left {
-    top: 8px;
-    left: 8px;
+    top: 6px;
+    left: 6px;
   }
 
   .felt-table.mode-6p .player-top-right {
-    top: 8px;
-    right: 8px;
+    top: 6px;
+    right: 6px;
   }
 
   .felt-table.mode-6p .player-bottom-left {
     top: 48%;
     transform: translateY(-50%);
     bottom: auto;
-    left: 6px;
+    left: 4px;
   }
 
   .felt-table.mode-6p .player-bottom-right {
     top: 48%;
     transform: translateY(-50%);
     bottom: auto;
-    right: 6px;
+    right: 4px;
   }
 
   .felt-table.mode-6p .trick-slot {
-    width: 52px;
-    height: 75px;
+    width: 46px;
+    height: 66px;
   }
 
   .felt-table.mode-6p .trick-slot .playing-card {
-    width: 50px;
-    height: 73px;
+    width: 44px;
+    height: 64px;
   }
 
   .felt-table.mode-6p .trick-slot.slot-top {
-    top: 28px;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-top-left {
-    top: 34px;
-    left: calc(50% - 70px);
+    top: 26px;
+    left: calc(50% - 56px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-top-right {
-    top: 34px;
-    left: calc(50% + 70px);
+    top: 26px;
+    left: calc(50% + 56px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom-left {
-    bottom: 16px;
-    left: calc(50% - 70px);
+    bottom: 10px;
+    left: calc(50% - 64px);
     transform: translateX(-50%);
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom-right {
-    bottom: 16px;
-    left: calc(50% + 70px);
+    bottom: 10px;
+    left: calc(50% + 64px);
     transform: translateX(-50%);
+  }
+
+  /* 4-Bilder Stacks Kompakte Skalierung auf Mobile */
+  .four-pics-table-pile {
+    margin: 1px 0;
+  }
+  .four-pics-stacks-row {
+    gap: 4px;
+  }
+  .four-pics-single-stack {
+    padding: 2px 4px;
+    margin-top: 2px;
+    border-radius: 6px;
+  }
+  .laid-card-item {
+    width: 20px;
+    height: 30px;
+    margin-left: -13px;
+  }
+  .laid-card-back {
+    font-size: 0.52rem;
+  }
+  .laid-pile-badge {
+    font-size: 0.5rem;
+    padding: 1px 4px;
+    top: -8px;
+    border-radius: 4px;
+  }
+  .four-pics-single-stack.is-revealed .laid-card-item {
+    width: 32px;
+    height: 46px;
+    margin-left: -9px;
   }
 
   .felt-table.mode-6p .trick-slot.slot-bottom {
@@ -3655,7 +3832,7 @@ input:checked + .slider:before {
   }
 
   .felt-table {
-    grid-template-rows: 50px 1fr 114px;
+    grid-template-rows: 50px 1fr minmax(118px, auto);
     grid-template-columns: 62px minmax(0, 1fr) 62px;
   }
 
@@ -3876,26 +4053,32 @@ input:checked + .slider:before {
   }
 
   .mit-action-banner {
-    padding: 2px 4px;
-    gap: 3px;
+    padding: 3px 6px;
+    gap: 4px;
     margin-bottom: 2px;
   }
 
   .mit-banner-buttons {
-    gap: 3px;
+    gap: 4px;
   }
 
   .btn-compact-dabei,
   .btn-compact-raus,
   .btn-compact-gegen,
   .btn-four-pics-compact {
-    font-size: 0.72rem;
-    padding: 3px 8px;
+    font-size: 0.82rem;
+    min-height: 38px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    box-sizing: border-box;
   }
 
   .knock-hearts-badge {
-    font-size: 0.75rem;
-    padding: 2px 5px;
+    font-size: 0.8rem;
+    min-height: 38px;
+    padding: 6px 9px;
+    border-radius: 8px;
+    box-sizing: border-box;
   }
 
   .four-pics-stacks-row {
@@ -3926,7 +4109,7 @@ input:checked + .slider:before {
   }
 
   .felt-table {
-    grid-template-rows: 48px 1fr 114px;
+    grid-template-rows: 48px 1fr minmax(114px, auto);
     grid-template-columns: 56px minmax(0, 1fr) 56px;
   }
 
@@ -3934,11 +4117,30 @@ input:checked + .slider:before {
     max-width: 145px;
   }
 
+  .btn-compact-dabei,
+  .btn-compact-raus,
+  .btn-compact-gegen,
+  .btn-four-pics-compact {
+    font-size: 0.78rem;
+    min-height: 36px;
+    padding: 7px 11px;
+    border-radius: 7px;
+    box-sizing: border-box;
+  }
+
+  .knock-hearts-badge {
+    font-size: 0.74rem;
+    min-height: 36px;
+    padding: 4px 6px;
+    border-radius: 7px;
+    box-sizing: border-box;
+  }
+
   .mit-field-notification,
   .contra-field-notification,
   .contra-re-field-notification,
   .cards-thrown-notification {
-    top: 42px;
+    top: 40px;
     padding: 2px 10px;
     font-size: 0.68rem;
     line-height: 1.2;
