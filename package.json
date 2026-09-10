@@ -1,0 +1,27 @@
+{
+  "name": "tuppen",
+  "version": "2.0.0",
+  "description": "Tuppen – Traditionelles Kartenspiel (Eifel/Ostbelgien) für 2-6 Spieler mit Node.js und Socket.io",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-tuppen-rules.js"
+  },
+  "keywords": [
+    "tuppen",
+    "card-game",
+    "multiplayer",
+    "socket.io",
+    "eifel",
+    "ostbelgien"
+  ],
+  "author": "Tuppen Game Engine",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}
