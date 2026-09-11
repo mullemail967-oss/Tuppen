@@ -823,6 +823,12 @@ function startNewRound(room) {
     // Alle Spieler mit > 1 Leben befragen (Klöpper-Spieler gehen automatisch mit!)
     room.pendingPovertyQueue = alivePlayers.filter(idx => room.scores[idx] > 1);
 
+    io.to(room.code).emit('kloepper_announced', {
+      kloepperIndices: kloepperPlayers,
+      kloepperNames,
+      kloepperStake
+    });
+
     if (room.pendingPovertyQueue.length > 0) {
       room.phase = 'POVERTY_CHECK';
       room.currentTurn = room.pendingPovertyQueue[0];

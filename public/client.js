@@ -1268,6 +1268,28 @@ socket.on('contra_announced', ({ playerName, seatIndex }) => {
   playSound('contra_sound');
 });
 
+socket.on('kloepper_announced', ({ kloepperNames, kloepperIndices, kloepperStake }) => {
+  const banner = document.getElementById('contraFieldNotification');
+  const textEl = document.getElementById('contraPopText');
+  if (banner && textEl) {
+    const isMe = (kloepperIndices || []).includes(mySeatIndex);
+    const msg = isMe ? 'Du stehst am 🔨' : `${kloepperNames} am 🔨`;
+    textEl.textContent = msg;
+    banner.classList.remove('hidden');
+    banner.classList.remove('fade-out');
+
+    if (contraNotificationTimer) clearTimeout(contraNotificationTimer);
+    contraNotificationTimer = setTimeout(() => {
+      banner.classList.add('fade-out');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('fade-out');
+      }, 400);
+    }, 2200);
+  }
+  playSound('contra_sound');
+});
+
 // Auffälliges Banner im Spielfeld, wenn jemand Kontra-Re (Re) gibt
 let contraReNotificationTimer = null;
 socket.on('contra_re_announced', ({ playerName, seatIndex }) => {
@@ -1758,7 +1780,17 @@ function renderStatusTicker() {
   }
 
   if (gameState.phase === 'POVERTY_CHECK') {
-    ticker.textContent = '⚠️ Armuts-Entscheidung läuft (Mitspielen oder Passen)...';
+    const kloepperList = (gameState.players || []).filter(p => p && p.isKloepper).map(p => p.name).join(', ');
+    const stake = gameState.currentStake || 2;
+    if (gameState.you && gameState.you.isKloepper) {
+      ticker.textContent = `🔨 Du stehst am Klöpper (Einsatz: ${stake} Leben)! Du bist automatisch dabei – Mitspieler entscheiden...`;
+    } else if (gameState.you && gameState.you.isPovertyDecisionTurn) {
+      ticker.textContent = `🔨 AM KLÖPPER (${kloepperList || '1 Leben'})! Einsatz: ${stake} Leben – Wähle: Dabei oder Raus?`;
+    } else if (gameState.you && gameState.you.folded) {
+      ticker.textContent = `🚪 Du bist ausgestiegen (-1 Leben). Warte auf Beginn von Stich 1...`;
+    } else {
+      ticker.textContent = `🔨 AM KLÖPPER (${kloepperList || '1 Leben'})! Einsatz: ${stake} Leben – Entscheidungen laufen...`;
+    }
   } else if (gameState.phase === 'KNOCK_DECISION') {
     const knocker = gameState.players ? gameState.players[gameState.knockerIndex] : null;
     const knockerName = knocker ? knocker.name : 'Ein Spieler';
@@ -2297,40 +2329,77 @@ function handleModals() {
       `;
     } else if (gameState.you && gameState.you.isFourPicturesChallengeTurn) {
       mitBanner.classList.add('hidden');
-    } else if (gameState.you && gameState.you.isPovertyDecisionTurn) {
-      mitBanner.classList.remove('hidden');
+    } else if (gameState.phase === 'POVERTY_CHECK') {
+      const isPovTurn = Boolean(gameState.you && gameState.you.isPovertyDecisionTurn);
+      const isKloepper = Boolean(gameState.you && gameState.you.isKloepper);
+      const isFolded = Boolean(gameState.you && gameState.you.folded);
+      const can4Pics = Boolean(gameState.you && gameState.you.canDeclare4Pictures);
+      const isLockActive = Boolean(gameState.you && gameState.you.fourPicturesLockActive);
       const stake = gameState.currentStake || 2;
       const heartsStr = stake <= 4 ? '❤️'.repeat(stake) : `❤️ × ${stake}`;
-      const can4Pics = Boolean(gameState.you && gameState.you.canDeclare4Pictures);
-      let pButtonsHtml = `
-        <span class="knock-hearts-badge" title="Klöpper-Einsatz: ${stake} Leben">${heartsStr}</span>
-        <button class="btn-compact-dabei" onclick="povertyResponse('play')" title="Mitgehen (${stake} Leben)">
-          Dabei
-        </button>
-        <button class="btn-compact-raus" onclick="povertyResponse('fold')" title="Passen (-1 Leben)">
-          Passen
-        </button>
-      `;
-      if (can4Pics) {
-        pButtonsHtml += `
-          <button class="btn-four-pics-compact" onclick="declareFourPictures()" title="4 Karten gegen frische tauschen (vor Stich 1)">
-            🎴 4 Bilder
+
+      if (isPovTurn) {
+        mitBanner.classList.remove('hidden');
+        let pButtonsHtml = `
+          <span class="knock-hearts-badge" title="Klöpper-Einsatz: ${stake} Leben">${heartsStr}</span>
+          <button class="btn-compact-dabei" onclick="povertyResponse('play')" title="Mitgehen (${stake} Leben)">
+            Dabei
+          </button>
+          <button class="btn-compact-raus" onclick="povertyResponse('fold')" title="Rausgehen / Passen (-1 Leben)">
+            Raus
           </button>
         `;
-      }
-      if (gameState.you && gameState.you.fourPicturesLockActive) {
-        const remSec = gameState.you.fourPicturesLockRemainingSec || 1;
-        pButtonsHtml += `
-          <span class="cooldown-ticker-badge" title="Bedenkzeit nach 4-Bilder-Ansage vor Stich 1">
-            ⏱️ ${remSec}s
+        if (can4Pics) {
+          pButtonsHtml += `
+            <button class="btn-four-pics-compact" onclick="declareFourPictures()" title="4 Karten gegen frische tauschen (vor Stich 1)">
+              🎴 4 Bilder
+            </button>
+          `;
+        }
+        if (isLockActive) {
+          const remSec = gameState.you.fourPicturesLockRemainingSec || 1;
+          pButtonsHtml += `
+            <span class="cooldown-ticker-badge" title="Bedenkzeit nach 4-Bilder-Ansage vor Stich 1">
+              ⏱️ ${remSec}s
+            </span>
+          `;
+        }
+        mitBanner.innerHTML = `<div class="mit-banner-buttons">${pButtonsHtml}</div>`;
+      } else if (isKloepper) {
+        mitBanner.classList.remove('hidden');
+        let pButtonsHtml = `
+          <span class="knock-hearts-badge" title="Klöpper-Einsatz: ${stake} Leben">${heartsStr}</span>
+          <span style="font-size:0.84rem; font-weight:700; color:#fbbf24; align-self:center;">
+            🔨 Du stehst am Klöpper! Automatisch dabei – Mitspieler entscheiden...
           </span>
         `;
+        if (can4Pics) {
+          pButtonsHtml += `
+            <button class="btn-four-pics-compact" onclick="declareFourPictures()" title="4 Karten gegen frische tauschen (vor Stich 1)">
+              🎴 4 Bilder
+            </button>
+          `;
+        }
+        mitBanner.innerHTML = `<div class="mit-banner-buttons">${pButtonsHtml}</div>`;
+      } else if (!isFolded) {
+        mitBanner.classList.remove('hidden');
+        let pButtonsHtml = `
+          <span class="knock-hearts-badge" title="Klöpper-Einsatz: ${stake} Leben">${heartsStr}</span>
+          <span style="font-size:0.84rem; font-weight:700; color:#cbd5e1; align-self:center;">
+            🔨 Klöpper-Runde (${stake} Leben)! Warte auf Entscheidung...
+          </span>
+        `;
+        if (can4Pics) {
+          pButtonsHtml += `
+            <button class="btn-four-pics-compact" onclick="declareFourPictures()" title="4 Karten gegen frische tauschen (vor Stich 1)">
+              🎴 4 Bilder
+            </button>
+          `;
+        }
+        mitBanner.innerHTML = `<div class="mit-banner-buttons">${pButtonsHtml}</div>`;
+      } else {
+        mitBanner.classList.add('hidden');
       }
-      mitBanner.innerHTML = `
-        <div class="mit-banner-buttons">
-          ${pButtonsHtml}
-        </div>
-      `;
     } else {
       const isKnockTurn = Boolean(gameState.you && gameState.you.isKnockDecisionTurn);
       const can4Pics = Boolean(gameState.you && gameState.you.canDeclare4Pictures);

@@ -242,14 +242,15 @@ function canPlayerKnock(playerLives, activePlayerIndices, currentStake, playerIn
   // Der Knocker selbst muss genügend Leben haben
   if (nextStake > myLives) return false;
 
-  // Für alle anderen aktiven Spieler mit > 1 Leben darf der Einsatz nicht deren Leben übersteigen
-  for (const idx of activePlayerIndices) {
-    if (idx === playerIndex) continue;
-    const lives = playerLives[idx] || 0;
-    if (lives > 1 && nextStake > lives) {
-      return false; // Verhindert Überklopfen von Spielern mit z. B. 2 Leben
-    }
-  }
+  // Mindestens ein aktiver Gegenspieler muss ebenfalls genügend Leben haben (>= nextStake).
+  // Spieler mit weniger Leben (z. B. 1 oder 2 Leben) sind all-in bzw. können nur ihre Restleben verlieren
+  // und blockieren nicht das gegenseitige Hochklopfen der Spieler mit mehr Leben.
+  const hasOpponentWithEnoughLives = activePlayerIndices.some(idx => {
+    if (idx === playerIndex) return false;
+    return (playerLives[idx] || 0) >= nextStake;
+  });
+
+  if (!hasOpponentWithEnoughLives) return false;
 
   return true;
 }
