@@ -165,8 +165,8 @@ function chooseCardToPlay(hand, currentTrick, trickIndex, botIndex, foldedIndice
  * @param {number|null} lastKnocker - Wer zuletzt geklopft hat
  * @returns {boolean}
  */
-function shouldBotKnock(hand, currentStake, botScore, activeScores, botIndex, lastKnocker) {
-  const activeIndices = activeScores.map((_, i) => i);
+function shouldBotKnock(hand, currentStake, botScore, activeScores, botIndex, lastKnocker, activePlayerIndices) {
+  const activeIndices = activePlayerIndices || (Array.isArray(activeScores) ? activeScores.map((_, i) => i) : Object.keys(activeScores).map(Number));
   if (!canPlayerKnock(activeScores, activeIndices, currentStake, botIndex, lastKnocker)) {
     return false;
   }

@@ -550,9 +550,10 @@ function sanitizeStateForPlayer(room, seatIndex) {
   const isMeHost = (!isSpectator && room.seats[seatIndex] && room.seats[seatIndex].socketId === room.hostSocketId);
   const isKnockDecisionTurn = (!isSpectator && room.phase === 'KNOCK_DECISION' && (room.pendingKnockQueue || []).includes(seatIndex));
   const isPovertyDecisionTurn = (!isSpectator && room.phase === 'POVERTY_CHECK' && (room.pendingPovertyQueue || []).includes(seatIndex));
-  const canKnockNow = !isSpectator && (
+  const isMyTurn = (!isSpectator && room.currentTurn === seatIndex);
+  const canKnockNow = isMyTurn && (
     (room.phase === 'PLAY_TRICK' && (isBlindKnockAllowed || room.trickCount > 0)) ||
-    isKnockDecisionTurn
+    (room.phase === 'KNOCK_DECISION' && (room.pendingKnockQueue || []).includes(seatIndex))
   ) && canPlayerKnock(room.scores, activeRoundPlayers, room.currentStake, seatIndex, room.lastKnocker);
 
   const hasRealFourPics = !isSpectator && hasFourPictures(myHand);
@@ -667,6 +668,7 @@ function sanitizeStateForPlayer(room, seatIndex) {
       folded: !isSpectator ? Boolean(room.foldedThisRound[seatIndex]) : false,
       isArm: !isSpectator ? Boolean(isKloepperAllowed && room.scores[seatIndex] === 1) : false,
       isKloepper: !isSpectator ? Boolean(isKloepperAllowed && room.scores[seatIndex] === 1) : false,
+      isTurn: isMyTurn,
       canKnock: canKnockNow,
       canDeclare4Pictures: canDeclare4Pic,
       hasRealFourPictures: hasRealFourPics,
@@ -1486,6 +1488,9 @@ function handleKnock(room, playerIndex) {
   const isCounterKnock = (room.phase === 'KNOCK_DECISION' && (room.pendingKnockQueue || []).includes(playerIndex));
   if (!isNormalPlay && !isCounterKnock) return;
 
+  // Nur klopfen oder gegenklopfen, wenn man selber an der Reihe ist!
+  if (room.currentTurn !== playerIndex) return;
+
   if (isNormalPlay && room.settings.allowBlindKnock === false && room.trickCount === 0) return;
   const activeRoundPlayers = getActiveRoundPlayers(room);
 
@@ -1552,6 +1557,8 @@ function handleKnockResponse(room, playerIndex, decision) {
   if (!room.pendingKnockQueue || !room.pendingKnockQueue.includes(playerIndex)) return;
 
   if (decision === 'counter_knock') {
+    // Nur gegenklopfen, wenn man selber an der Reihe ist!
+    if (room.currentTurn !== playerIndex) return;
     handleKnock(room, playerIndex);
     return;
   }
@@ -1931,10 +1938,16 @@ function checkBotAction(room) {
       return;
     }
 
-    // 2. Klopf-Entscheidung (Dabei vs. Raus)
+    // 2. Klopf-Entscheidung (Dabei vs. Raus vs. Gegenklopfen)
     if (room.phase === 'KNOCK_DECISION') {
       if (room.trickCount === 0 && room.currentTrick.length === 0 && botHand.length === 4 && shouldBotDeclare4Pictures(botHand)) {
         handleDeclareFourPictures(room, botIndex);
+        return;
+      }
+      const activeRoundPlayers = getActiveRoundPlayers(room);
+      if (canPlayerKnock(room.scores, activeRoundPlayers, room.currentStake, botIndex, room.lastKnocker) &&
+          shouldBotKnock(botHand, room.currentStake, botScore, room.scores, botIndex, room.lastKnocker, activeRoundPlayers)) {
+        handleKnockResponse(room, botIndex, 'counter_knock');
         return;
       }
       const decision = shouldBotFoldOrCall(botHand, room.currentStake - 1, room.currentStake, botScore);
@@ -1971,8 +1984,9 @@ function checkBotAction(room) {
       }
 
       // 3c. Prüfen, ob der Bot klopfen möchte
-      const activeScores = getActiveRoundPlayers(room).map(i => room.scores[i]);
-      if (shouldBotKnock(botHand, room.currentStake, botScore, activeScores, botIndex, room.lastKnocker)) {
+      const activeRoundPlayers = getActiveRoundPlayers(room);
+      if (canPlayerKnock(room.scores, activeRoundPlayers, room.currentStake, botIndex, room.lastKnocker) &&
+          shouldBotKnock(botHand, room.currentStake, botScore, room.scores, botIndex, room.lastKnocker, activeRoundPlayers)) {
         handleKnock(room, botIndex);
         return;
       }
